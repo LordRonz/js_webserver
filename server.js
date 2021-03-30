@@ -1,12 +1,17 @@
 require('dotenv').config();
-const http = require('http');
-const { MongoClient } = require('mongodb');
+const https = require('https');
+// Connect to mongodb atlas
+const mongoose = require('./database/mongooseutil');
 const { getAllData, getData, createData, updateData, deleteData } = require('./controllers/dataController');
 const { createUser, loginUser } = require('./controllers/userController');
-const jwt = require('jsonwebtoken');
-const mongoose = require('./database/mongooseutil')
+const fs = require('fs');
 
-const server = http.createServer((req, res)=>{
+const options = {
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem'),
+}
+
+const server = https.createServer(options, (req, res)=>{
     console.log(`${req.method} ${req.httpVersion} ${req.url}`);
     if(req.url === '/api/data' && req.method === 'GET') {
         getAllData(req, res);
