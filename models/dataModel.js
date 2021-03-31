@@ -6,8 +6,7 @@ async function findAll() {
     try {
         const res = await Data.find().limit();
         return res;
-    }
-    catch(err) {
+    } catch(err) {
         throw err;
     }
 }
