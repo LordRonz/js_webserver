@@ -1,7 +1,7 @@
 require('dotenv').config();
 const https = require('https');
 // Connect to mongodb atlas
-const mongoose = require('./database/mongooseutil');
+require('./database/mongooseutil');
 const { getAllData, getData, createData, updateData, deleteData } = require('./controllers/dataController');
 const { createUser, loginUser } = require('./controllers/userController');
 const fs = require('fs');
