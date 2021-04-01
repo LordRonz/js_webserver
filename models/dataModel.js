@@ -4,7 +4,7 @@ const Data = require('./dataSchema');
 async function findAll(page) {
     try {
         const count = await Data.countDocuments();
-        const lim = 2;
+        const lim = 20;
         const totalPages = Math.ceil(count / lim);
         if(page && page > 0 && page <= totalPages) {
             const res = await Data.find()
