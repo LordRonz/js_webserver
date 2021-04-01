@@ -20,6 +20,10 @@ const server = https.createServer(options, (req, res)=>{
         const id = req.url.split('/')[3];
         getData(req, res, id);
     }
+    else if(req.url.match(/\/api\/data\/page\/([0-9]+$)/) && req.method === 'GET') {
+        const page = parseInt(req.url.split('/')[4]);
+        getAllData(req, res, page);
+    }
     else if(req.url === '/api/data' && req.method === 'POST') {
         createData(req, res);
     }

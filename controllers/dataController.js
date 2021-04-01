@@ -4,11 +4,11 @@ const { getPostData } = require('../utils');
 const { verifyToken } = require('./verifyToken');
 const { headers } = require('../headers');
 
-async function getAllData(req, res) {
+async function getAllData(req, res, page) {
     await verifyToken(req, res);
     if(!req.user) return;
     try {
-        const data = await Data.findAll();
+        const data = await Data.findAll(page);
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
         res.write(JSON.stringify(data));
         res.end();

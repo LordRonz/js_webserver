@@ -1,10 +1,19 @@
 const { ObjectId } = require('mongodb');
-const { client } = require('../database/database');
 const Data = require('./dataSchema');
 
-async function findAll() {
+async function findAll(page) {
     try {
-        const res = await Data.find().limit();
+        const count = await Data.countDocuments();
+        const lim = 2;
+        const totalPages = Math.ceil(count / lim);
+        if(page && page > 0 && page <= totalPages) {
+            const res = await Data.find()
+            .limit(lim)
+            .skip((page - 1) * lim)
+            .exec();
+            return res;
+        }
+        const res = await Data.find();
         return res;
     } catch(err) {
         throw err;
