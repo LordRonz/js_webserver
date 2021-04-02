@@ -44,7 +44,18 @@ async function create(data) {
     }
 }
 
-async function update(filter, data, option=null) {
+async function replace(filter, data, option) {
+    try {
+        const updatedData = await Data.findOneAndReplace(filter, data, {
+            new: true,
+        });
+        return updatedData;
+    } catch(err) {
+        throw err;
+    }
+}
+
+async function update(filter, data, option) {
     try {
         const updatedData = await Data.findOneAndUpdate(filter, data, {
             new: true,
@@ -68,6 +79,7 @@ module.exports = {
     findAll,
     findById,
     create,
+    replace,
     update,
     del,
 };

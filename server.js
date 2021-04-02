@@ -27,7 +27,7 @@ const server = https.createServer(options, (req, res)=>{
     else if(req.url === '/api/data' && req.method === 'POST') {
         createData(req, res);
     }
-    else if(req.url.match(/\/api\/data\/([0-9]+)/) && req.method === 'PUT') {
+    else if(req.url.match(/\/api\/data\/([0-9]+)/) && (req.method === 'PUT' || req.method == 'PATCH')) {
         const id = req.url.split('/')[3];
         updateData(req, res, id);
     }

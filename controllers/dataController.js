@@ -64,7 +64,7 @@ async function updateData(req, res, id) {
         const body = await getPostData(req);
         const filter = { _id: ObjectId(id) };
         const updateDoc = JSON.parse(body);
-        const updData = await Data.update(filter, updateDoc);
+        const updData = req.method === 'PATCH' ? await Data.update(filter, updateDoc) : await Data.replace(filter, updateDoc);
         
         if(!updData) {
             res.writeHead(404, { ...headers, 'Content-Type': 'application/json' });
