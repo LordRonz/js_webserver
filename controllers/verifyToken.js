@@ -7,7 +7,7 @@ require('dotenv').config();
 
 async function verifyToken(req, res) {
     try {
-        const authToken = await getHeader(req, 'auth-token');
+        const authToken = (await getHeader(req, 'authorization')).split(" ")[1];
 
         if(!authToken) {
             res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });

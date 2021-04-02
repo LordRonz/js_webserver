@@ -60,7 +60,7 @@ async function loginUser(req, res) {
 
         const token = jwt.sign({ _id: user._id }, process.env.ACCESS_TOKEN_SECRET, { algorithm: 'HS512', expiresIn: 60 * 20 });
         res.statusCode = 200;
-        res.writeHead(200, { ...headers, 'Content-Type': 'application/json','auth-token': token });
+        res.writeHead(200, { ...headers, 'Content-Type': 'application/json','Authorization': token });
         res.write(JSON.stringify({ message: "Success", token: token }));
         return res.end();
     } catch(error) {

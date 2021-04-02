@@ -1,17 +1,14 @@
-const fs = require('fs');
-
 function getPostData(req) {
     return new Promise((resolve, reject) => {
         try {
             let body = '';
-            req.on('data', (chunk) => {
-                body += chunk.toString();
+            req.on('data', chunk => {
+                body += chunk;
             });
             req.on('end', () => {
                 resolve(body);
             })
-        }
-        catch(err) {
+        } catch(err) {
             reject(err);
         }
     });
@@ -22,8 +19,7 @@ function getHeader(req, headerName) {
         try {
             const header = req.headers[headerName];
             resolve(header);
-        }
-        catch(err) {
+        } catch(err) {
             reject(err);
         }
     });
