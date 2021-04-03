@@ -25,8 +25,18 @@ async function findUser(username) {
     }
 }
 
+async function del(filter) {
+    try {
+        const res = await User.deleteOne(filter);
+        return res;
+    } catch(err) {
+        throw err;
+    }
+}
+
 module.exports = {
     create,
     login,
     findUser,
+    del,
 }

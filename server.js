@@ -3,7 +3,7 @@ const https = require('https');
 // Connect to mongodb atlas
 require('./database/mongooseutil');
 const { getAllData, getData, createData, updateData, deleteData } = require('./controllers/dataController');
-const { createUser, loginUser } = require('./controllers/userController');
+const { createUser, loginUser, changePass, deleteUser } = require('./controllers/userController');
 const fs = require('fs');
 
 const options = {
@@ -13,6 +13,10 @@ const options = {
 
 const server = https.createServer(options, (req, res)=>{
     console.log(`${req.method} ${req.httpVersion} ${req.url}`);
+    if(req.url.length > 50) {
+        res.writeHead(414, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: '414 URI Too Long' }));
+    }
     if(req.url === '/api/data' && req.method === 'GET') {
         getAllData(req, res);
     }
@@ -40,6 +44,12 @@ const server = https.createServer(options, (req, res)=>{
     }
     else if(req.url === '/api/user/login' && req.method === 'POST') {
         loginUser(req, res);
+    }
+    else if(req.url === '/api/user' && req.method === 'PATCH') {
+        changePass(req, res);
+    }
+    else if(req.url === '/api/user' && req.method === 'DELETE') {
+        deleteUser(req, res);
     }
     else {
         res.writeHead(404, { 'Content-Type': 'application/json' });

@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { headers } = require('../headers');
 const crypto = require('crypto');
+const { verifyToken } = require('./verifyToken');
+const { ObjectId } = require('mongodb');
 require('dotenv').config();
 
 async function createUser(req, res) {
@@ -19,10 +21,14 @@ async function createUser(req, res) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ message: "Invalid username!" }));
         }
+        if(!user.username.match(/\w+$/)) {
+            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: "Username must contain only letters, numbers, and underscores" }));
+        }
         if(!user.password || user.password.length < 8 || user.password.length > 255) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
             if(user.password) {
-                return res.end(JSON.stringify({ message: "Passwords must be at least 8 characters long" }));
+                return res.end(JSON.stringify({ message: "Password must be between 8-255 characters long" }));
             }
             return res.end(JSON.stringify({ message: "Invalid username!" }));
         }
@@ -70,7 +76,76 @@ async function loginUser(req, res) {
     }
 }
 
+async function changePass(req, res) {
+    await verifyToken(req, res);
+    if(!req.user) return;
+    try {
+        const body = await getPostData(req);
+        const parsed = JSON.parse(body);
+        const oldPass = parsed.oldPassword;
+        const newPass = parsed.newPassword;
+        const username = parsed.username;
+        if(!username) {
+            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: 'Provide username!' }));
+        }
+        const user = await Users.findUser(username);
+        if(!user) {
+            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: 'User Not Found' }));
+        }
+        const shaPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(oldPass).digest('hex');
+        const validPass = await bcrypt.compare(shaPass, user.password)
+        if(!validPass) {
+            res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: 'Not Allowed' }));
+        }
+        const salt = await bcrypt.genSalt(13);
+        const shaNewPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(newPass).digest('hex');
+        const hashedNewPass = await bcrypt.hash(shaNewPass, salt);
+        user.password = hashedNewPass;
+        const updatedUser = await user.save();
+        res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify(updatedUser));
+    } catch(error) {
+        throw error;
+    }
+}
+
+async function deleteUser(req, res) {
+    await verifyToken(req, res);
+    if(!req.user) return;
+    try {
+        const body = await getPostData(req);
+        const parsed = JSON.parse(body);
+        const password = parsed.password;
+        const username = parsed.username;
+        if(!username || !password) {
+            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: 'Provide username and password!' }));
+        }
+        const user = await Users.findUser(username);
+        if(!user) {
+            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: 'User Not Found' }));
+        }
+        const shaPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(password).digest('hex');
+        const validPass = await bcrypt.compare(shaPass, user.password)
+        if(!validPass) {
+            res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: 'Not Allowed' }));
+        }
+        const deletedUser = await Users.del({ _id: ObjectId(user._id) });
+        res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify(deletedUser));
+    } catch(error) {
+        throw error;
+    }
+}
+
 module.exports = {
     createUser,
     loginUser,
+    changePass,
+    deleteUser,
 }
