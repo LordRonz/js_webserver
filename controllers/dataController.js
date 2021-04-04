@@ -10,9 +10,9 @@ async function getAllData(req, res, page) {
     await verifyToken(req, res);
     if(!req.user) return;
     try {
-        const data = await Data.findAll(page);
+        const data = Data.findAll(page);
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
-        res.write(JSON.stringify(data));
+        res.write(JSON.stringify(await data));
         res.end();
     } catch(error) {
         console.log(error);
@@ -49,9 +49,9 @@ async function createData(req, res) {
     try {
         const body = await getPostData(req);
         const data = sanitize(safeParse(body));
-        const newData = await Data.create(data);
+        const newData = Data.create(data);
         res.writeHead(201, { ...headers, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify(newData));
+        return res.end(JSON.stringify(await newData));
     } catch(error) {
         console.log(error);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
@@ -63,9 +63,9 @@ async function updateData(req, res, id) {
     await verifyToken(req, res);
     if(!req.user) return;
     try {
-        const body = await getPostData(req);
+        const body = getPostData(req);
         const filter = { _id: ObjectId(id) };
-        const updateDoc = sanitize(safeParse(body));
+        const updateDoc = sanitize(safeParse(await body));
         const updData = req.method === 'PATCH' ? await Data.update(filter, updateDoc) : await Data.replace(filter, updateDoc);
         
         if(!updData) {

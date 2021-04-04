@@ -1,6 +1,5 @@
 "use strict";
 
-require('dotenv').config();
 const https = require('https');
 // Connect to mongodb atlas
 require('./database/mongooseutil');
@@ -72,7 +71,8 @@ server.listen(PORT, (err) => {
 
 function handleExit(signal) {
     console.log(`Received ${signal}. Close my server properly.`);
-    server.close(function () {
+    server.close((err) => {
+        if(err) console.log(err);
         process.exit(0);
     });
 }

@@ -14,11 +14,6 @@ async function createUser(req, res) {
     try {
         const body = await getPostData(req);
         let user = sanitize(safeParse(body));
-        const userExist = await Users.findUser(user.username);
-        if(userExist) {
-            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ message: "Username Taken!" }));
-        }
         if(!user.username || user.username.length === 0) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ message: "Invalid username!" }));
@@ -38,13 +33,18 @@ async function createUser(req, res) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ message: "Username must contain only letters, numbers, and underscores" }));
         }
-        const salt = await bcrypt.genSalt(13);
+        const userExist = await Users.findUser(user.username);
+        if(userExist) {
+            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: "Username Taken!" }));
+        }
+        const salt = bcrypt.genSalt(13);
         const shaPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(user.password).digest('hex');
-        const hashedPass = await bcrypt.hash(shaPass, salt);
+        const hashedPass = await bcrypt.hash(shaPass, await salt);
         user = { ...user, password: hashedPass };
-        const newUser = await Users.create(user);
+        const newUser = Users.create(user);
         res.writeHead(201, { ...headers, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify(newUser));
+        return res.end(JSON.stringify(await newUser));
     } catch(error) {
         console.log(error);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
@@ -57,11 +57,14 @@ async function loginUser(req, res) {
         const body = await getPostData(req);
         const parsed = sanitize(safeParse(body));
         const username = parsed.username;
+        if(!username || !parsed.password) {
+            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: 'Provide a username and password!' }));
+        }
         const user = await Users.findUser(username);
         if(!user) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'User Not Found' }));
-            return;
+            return res.end(JSON.stringify({ message: 'User Not Found' }));
         }
         const shaPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(parsed.password).digest('hex');
         const validPass = await bcrypt.compare(shaPass, user.password)
@@ -106,15 +109,17 @@ async function changePass(req, res) {
             res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ message: 'Not Allowed' }));
         }
-        const salt = await bcrypt.genSalt(13);
+        const salt = bcrypt.genSalt(13);
         const shaNewPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(newPass).digest('hex');
-        const hashedNewPass = await bcrypt.hash(shaNewPass, salt);
+        const hashedNewPass = await bcrypt.hash(shaNewPass, await salt);
         user.password = hashedNewPass;
-        const updatedUser = await user.save();
+        const updatedUser = user.save();
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify(updatedUser));
+        return res.end(JSON.stringify(await updatedUser));
     } catch(error) {
-        throw error;
+        console.log(error);
+        res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ message: "Internal Server Error" }));
     }
 }
 
@@ -141,11 +146,13 @@ async function deleteUser(req, res) {
             res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ message: 'Not Allowed' }));
         }
-        const deletedUser = await Users.del({ _id: ObjectId(user._id) });
+        const deletedUser = Users.del({ _id: ObjectId(user._id) });
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify(deletedUser));
+        return res.end(JSON.stringify(await deletedUser));
     } catch(error) {
-        throw error;
+        console.log(error);
+        res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ message: "Internal Server Error" }));
     }
 }
 
