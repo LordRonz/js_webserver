@@ -1,35 +1,13 @@
-version: '3'
-
+version: "3.8"
 services:
-  js_webserver:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: js_webserver
-    container_name: js_webserver
-    restart: unless-stopped
-    networks:
-      - app-network
-  reverseproxy:
-    image: nginx
-    container_name: reverseproxy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      - web-root:/home/lordronz/server/js_webserver
-      - ./nginx-conf:/etc/nginx/conf.d
-    depends_on:
-      - js_webserver
-    networks:
-      - app-network
-volumes:
-  web-root:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/lordronz/server/js_webserver
-      o: bind
-networks:
-  app-network:
-    driver: bridge
+    api:
+        build:
+            context: ./api
+        ports:
+            - "5000:5000"
+    nginx:
+        restart: always
+        build:
+            context: ./nginx
+        ports:
+            - "80:80"
