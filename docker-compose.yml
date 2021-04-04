@@ -23,13 +23,13 @@ services:
       - js_webserver
     networks:
       - app-network
-  volumes:
-    web-root:
-      driver: local
-      driver_opts:
-        type: none
-        device: /home/lordronz/server/js_webserver
-        o: bind
-  networks:
-    app-network:
-      driver: bridge
+volumes:
+  web-root:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/lordronz/server/js_webserver
+      o: bind
+networks:
+  app-network:
+    driver: bridge
