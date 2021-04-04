@@ -1,3 +1,5 @@
+"use strict";
+
 const { getHeader } = require('../utils');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userSchema');

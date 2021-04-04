@@ -1,3 +1,5 @@
+"use strict";
+
 require('dotenv').config();
 const https = require('https');
 // Connect to mongodb atlas
@@ -12,6 +14,7 @@ const options = {
 }
 
 const server = https.createServer(options, (req, res)=>{
+    req.url = encodeURI(req.url);
     console.log(`${req.method} ${req.httpVersion} ${req.url}`);
     if(req.url.length > 50) {
         res.writeHead(414, { 'Content-Type': 'application/json' });

@@ -1,5 +1,7 @@
+"use strict";
+
 const Users = require('../models/userModel');
-const { getPostData } = require('../utils');
+const { getPostData, sanitize, safeParse } = require('../utils');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { headers } = require('../headers');
@@ -11,7 +13,7 @@ require('dotenv').config();
 async function createUser(req, res) {
     try {
         const body = await getPostData(req);
-        let user = JSON.parse(body);
+        let user = sanitize(safeParse(body));
         const userExist = await Users.findUser(user.username);
         if(userExist) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
@@ -21,16 +23,20 @@ async function createUser(req, res) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ message: "Invalid username!" }));
         }
-        if(!user.username.match(/\w+$/)) {
+        if(user.username > 255) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ message: "Username must contain only letters, numbers, and underscores" }));
+            return res.end(JSON.stringify({ message: "Username is too long!" }));
         }
         if(!user.password || user.password.length < 8 || user.password.length > 255) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
             if(user.password) {
                 return res.end(JSON.stringify({ message: "Password must be between 8-255 characters long" }));
             }
-            return res.end(JSON.stringify({ message: "Invalid username!" }));
+            return res.end(JSON.stringify({ message: "Invalid password!" }));
+        }
+        if(!user.username.match(/\w+$/)) {
+            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: "Username must contain only letters, numbers, and underscores" }));
         }
         const salt = await bcrypt.genSalt(13);
         const shaPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(user.password).digest('hex');
@@ -49,7 +55,7 @@ async function createUser(req, res) {
 async function loginUser(req, res) {
     try {
         const body = await getPostData(req);
-        const parsed = JSON.parse(body);
+        const parsed = sanitize(safeParse(body));
         const username = parsed.username;
         const user = await Users.findUser(username);
         if(!user) {
@@ -81,7 +87,7 @@ async function changePass(req, res) {
     if(!req.user) return;
     try {
         const body = await getPostData(req);
-        const parsed = JSON.parse(body);
+        const parsed = sanitize(safeParse(body));
         const oldPass = parsed.oldPassword;
         const newPass = parsed.newPassword;
         const username = parsed.username;
@@ -117,7 +123,7 @@ async function deleteUser(req, res) {
     if(!req.user) return;
     try {
         const body = await getPostData(req);
-        const parsed = JSON.parse(body);
+        const parsed = sanitize(safeParse(body));
         const password = parsed.password;
         const username = parsed.username;
         if(!username || !password) {

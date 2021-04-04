@@ -1,6 +1,6 @@
-const { ObjectId } = require('mongodb');
-const User = require('./userSchema');
+"use strict";
 
+const User = require('./userSchema');
 
 async function create(user) {
     try {

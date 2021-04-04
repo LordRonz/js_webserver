@@ -1,6 +1,8 @@
+"use strict";
+
 const Data = require('../models/dataModel');
 const { ObjectId } = require('mongodb');
-const { getPostData } = require('../utils');
+const { getPostData, sanitize, safeParse } = require('../utils');
 const { verifyToken } = require('./verifyToken');
 const { headers } = require('../headers');
 
@@ -46,7 +48,7 @@ async function createData(req, res) {
     if(!req.user) return;
     try {
         const body = await getPostData(req);
-        const data = JSON.parse(body);
+        const data = sanitize(safeParse(body));
         const newData = await Data.create(data);
         res.writeHead(201, { ...headers, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify(newData));
@@ -63,7 +65,7 @@ async function updateData(req, res, id) {
     try {
         const body = await getPostData(req);
         const filter = { _id: ObjectId(id) };
-        const updateDoc = JSON.parse(body);
+        const updateDoc = sanitize(safeParse(body));
         const updData = req.method === 'PATCH' ? await Data.update(filter, updateDoc) : await Data.replace(filter, updateDoc);
         
         if(!updData) {
