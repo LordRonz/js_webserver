@@ -14,6 +14,12 @@ async function verifyToken(req, res) {
             res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ message: "Access Denied" }));
         }
+
+        if(!authHeader.startsWith('Bearer ')) {
+            res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ message: "Use Bearer Token !" }));
+        }
+
         const authToken = authHeader.split(" ")[1];
 
         if(!authToken) {

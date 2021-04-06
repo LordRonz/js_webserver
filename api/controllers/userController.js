@@ -75,7 +75,7 @@ async function loginUser(req, res) {
 
         const token = jwt.sign({ _id: user._id }, process.env.ACCESS_TOKEN_SECRET, { algorithm: 'HS512', expiresIn: 60 * 20 });
         res.statusCode = 200;
-        res.writeHead(200, { ...headers, 'Content-Type': 'application/json','Authorization': token });
+        res.writeHead(200, { ...headers, 'Content-Type': 'application/json','Authorization': `Bearer ${token}` });
         res.write(JSON.stringify({ message: "Success", token: token }));
         return res.end();
     } catch(error) {
@@ -94,9 +94,9 @@ async function changePass(req, res) {
         const oldPass = parsed.oldPassword;
         const newPass = parsed.newPassword;
         const username = parsed.username;
-        if(!username) {
+        if(!username || !newPass || !oldPass) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ message: 'Provide username!' }));
+            return res.end(JSON.stringify({ message: 'Provide username, oldPassword, and newPassword!' }));
         }
         const user = await Users.findUser(username);
         if(!user) {
