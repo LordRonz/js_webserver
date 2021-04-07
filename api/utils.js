@@ -1,48 +1,75 @@
-"use strict";
-
 function getPostData(req) {
     return new Promise((resolve, reject) => {
         try {
             let body = '';
-            req.on('data', chunk => {
+            req.on('data', (chunk) => {
                 body += chunk;
             });
             req.on('end', () => {
                 resolve(body);
-            })
-        } catch(err) {
+            });
+        } catch (err) {
             reject(err);
         }
     });
-};
+}
 
 function getHeader(req, headerName) {
     return new Promise((resolve, reject) => {
         try {
-            const header = req.headers[headerName];
+            const header = req.headers[`${headerName}`];
             resolve(header);
-        } catch(err) {
+        } catch (err) {
             reject(err);
         }
     });
-};
+}
 
 function sanitize(v) {
     if (v instanceof Object) {
-        for (var key in v) {
+        Object.keys(v).forEach((key) => {
             if (/^\$/.test(key)) {
-                delete v[key];
+                delete v[`${key}`];
             } else {
-                sanitize(v[key]);
+                sanitize(v[`${key}`]);
+            }
+        });
+    }
+    return v;
+}
+
+const internals = {
+    suspectRx: /"(?:_|\\u005[Ff])(?:_|\\u005[Ff])(?:p|\\u0070)(?:r|\\u0072)(?:o|\\u006[Ff])(?:t|\\u0074)(?:o|\\u006[Ff])(?:_|\\u005[Ff])(?:_|\\u005[Ff])"\s*:/,
+};
+
+function scan(obj, options = {}) {
+    let next = [obj];
+
+    while (next.length) {
+        const nodes = next;
+        next = [];
+        for (let i = 0; i < nodes.length; ++i) {
+            if (Object.prototype.hasOwnProperty.call(nodes[`${i}`], '__proto__')) { // Avoid calling node.hasOwnProperty directly
+                if (options.protoAction !== 'remove') {
+                    throw new SyntaxError('Object contains forbidden prototype property');
+                }
+
+                delete nodes[`${i}`].__proto__;
+            }
+            if (nodes[`${i}`] instanceof Object) {
+                for (const key in nodes[`${i}`]) {
+                    if (Object.prototype.isPrototypeOf.call(nodes[`${i}`], key)) {
+                        const value = nodes[`${i}`][`${key}`];
+                        if (value
+                            && typeof value === 'object') {
+                            next.push(nodes[`${i}`][`${key}`]);
+                        }
+                    }
+                }
             }
         }
     }
-    return v;
-};
-
-const internals = {
-    suspectRx: /"(?:_|\\u005[Ff])(?:_|\\u005[Ff])(?:p|\\u0070)(?:r|\\u0072)(?:o|\\u006[Ff])(?:t|\\u0074)(?:o|\\u006[Ff])(?:_|\\u005[Ff])(?:_|\\u005[Ff])"\s*\:/
-};
+}
 
 function parse(text, ...args) {
     const firstOptions = typeof args[0] === 'object' && args[0];
@@ -61,9 +88,8 @@ function parse(text, ...args) {
 
     // Ignore null and non-objects
 
-    if (!obj ||
-        typeof obj !== 'object') {
-
+    if (!obj
+        || typeof obj !== 'object') {
         return obj;
     }
 
@@ -78,45 +104,15 @@ function parse(text, ...args) {
     scan(obj, options);
 
     return obj;
-};
-
-function scan(obj, options = {}) {
-
-    let next = [obj];
-
-    while (next.length) {
-        const nodes = next;
-        next = [];
-
-        for (const node of nodes) {
-            if (Object.prototype.hasOwnProperty.call(node, '__proto__')) {      // Avoid calling node.hasOwnProperty directly
-                if (options.protoAction !== 'remove') {
-                    throw new SyntaxError('Object contains forbidden prototype property');
-                }
-
-                delete node.__proto__;
-            }
-
-            for (const key in node) {
-                const value = node[key];
-                if (value &&
-                    typeof value === 'object') {
-
-                    next.push(node[key]);
-                }
-            }
-        }
-    }
-};
+}
 
 function safeParse(text, reviver) {
     try {
         return parse(text, reviver);
-    }
-    catch (ignoreError) {
+    } catch (ignoreError) {
         return null;
     }
-};
+}
 
 module.exports = {
     getPostData,
