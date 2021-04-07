@@ -137,7 +137,7 @@ async function deleteUser(req, res) {
         }
         const user = await Users.findUser(username);
         if(!user) {
-            res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+            res.writeHead(404, { ...headers, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ message: 'User Not Found' }));
         }
         const shaPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(password).digest('hex');

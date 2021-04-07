@@ -15,10 +15,19 @@ const options = {
 const server = https.createServer(options, (req, res)=>{
     req.url = encodeURI(req.url);
     console.log(`${req.method} ${req.httpVersion} ${req.url}`);
+
+    // handle timeout
+    res.setTimeout(16969, () => {
+        res.writeHead(408, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: '408 Request Timeout' }));
+    });
+
+    // URI too long
     if(req.url.length > 50) {
         res.writeHead(414, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: '414 URI Too Long' }));
     }
+
     if(req.url === '/api/data' && req.method === 'GET') {
         getAllData(req, res);
     }
