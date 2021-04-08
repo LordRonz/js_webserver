@@ -3,11 +3,19 @@ const https = require('https');
 require('./database/mongooseutil');
 const fs = require('fs');
 const {
-    getAllData, getData, createData, updateData, deleteData,
+    getAllData,
+    getData,
+    createData,
+    updateData,
+    deleteData,
 } = require('./controllers/dataController');
 const {
-    createUser, loginUser, changePass, deleteUser,
+    createUser,
+    loginUser,
+    changePass,
+    deleteUser,
 } = require('./controllers/userController');
+const { checkId } = require('./utils');
 
 const options = {
     key: fs.readFileSync('./key.pem'),
@@ -32,20 +40,47 @@ const server = https.createServer(options, (req, res) => {
 
     if (req.url === '/api/data' && req.method === 'GET') {
         getAllData(req, res);
-    } else if (req.url.match(/\/api\/data\/([0-9]+)/) && req.method === 'GET') {
+    } else if (
+        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/) &&
+        req.method === 'GET'
+    ) {
         const id = req.url.split('/')[3];
-        getData(req, res, id);
-    } else if (req.url.match(/\/api\/data\/page\/([0-9]+$)/) && req.method === 'GET') {
+        if (!checkId(id)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Invalid ID' }));
+        } else {
+            getData(req, res, id);
+        }
+    } else if (
+        req.url.match(/\/api\/data\/page\/([0-9]+$)/) &&
+        req.method === 'GET'
+    ) {
         const page = parseInt(req.url.split('/')[4], 10);
         getAllData(req, res, page);
     } else if (req.url === '/api/data' && req.method === 'POST') {
         createData(req, res);
-    } else if (req.url.match(/\/api\/data\/([0-9]+)/) && (req.method === 'PUT' || req.method === 'PATCH')) {
+    } else if (
+        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/) &&
+        (req.method === 'PUT' || req.method === 'PATCH')
+    ) {
         const id = req.url.split('/')[3];
-        updateData(req, res, id);
-    } else if (req.url.match(/\/api\/data\/([0-9]+)/) && req.method === 'DELETE') {
+        if (!checkId(id)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Invalid ID' }));
+        } else {
+            updateData(req, res, id);
+        }
+    } else if (
+        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/) &&
+        req.method === 'DELETE'
+    ) {
         const id = req.url.split('/')[3];
-        deleteData(req, res, id);
+        if (!checkId(id)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Invalid ID' }));
+        } else {
+            deleteData(req, res, id);
+        }
     } else if (req.url === '/api/user/register' && req.method === 'POST') {
         createUser(req, res);
     } else if (req.url === '/api/user/login' && req.method === 'POST') {
@@ -70,14 +105,18 @@ server.listen(PORT, (err) => {
     console.log(`PID: ${process.pid}`);
 });
 
-function handleExit(signal) {
+const handleExit = (signal) => {
     console.log(`Received ${signal}. Close my server properly.`);
     server.close((err) => {
         if (err) console.log(err);
         process.exit(0);
     });
-}
+};
 
-process.on('SIGINT', handleExit);
-process.on('SIGQUIT', handleExit);
-process.on('SIGTERM', handleExit);
+process
+    .on('SIGINT', handleExit)
+    .on('SIGQUIT', handleExit)
+    .on('SIGTERM', handleExit)
+    .on('unhandledRejection', (e) => {
+        throw e;
+    });

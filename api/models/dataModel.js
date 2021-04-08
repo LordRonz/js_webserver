@@ -1,81 +1,56 @@
-"use strict";
-
 const { ObjectId } = require('mongodb');
 const Data = require('./dataSchema');
 
-async function findAll(page) {
-    try {
-        const lim = 20;
-        const count = await Data.countDocuments();
-        const totalPages = Math.ceil(count / lim);
-        if(page && page > 0 && page <= totalPages) {
-            const res = await Data.find()
+const findAll = async (page) => {
+    const lim = 20;
+    const count = await Data.countDocuments();
+    const totalPages = Math.ceil(count / lim);
+    if (page && typeof page === 'number' && page > 0 && page <= totalPages) {
+        const res = await Data.find()
             .limit(lim)
             .skip((page - 1) * lim)
             .exec();
-            return res;
-        }
-        const res = await Data.find();
         return res;
-    } catch(err) {
-        throw err;
     }
-}
+    const res = await Data.find();
+    return res;
+};
 
-async function findById(id) {
-    try {
-        const res = await Data.findOne({ _id: ObjectId(id) });
-        return res;
-    } catch(err) {
-        throw err;
-    }
-}
+const findById = async (id) => {
+    const res = await Data.findOne({ _id: ObjectId(id) });
+    return res;
+};
 
-async function create(data) {
-    try {
-        let newData = {};
-        if(Array.isArray(data)) {
-            newData = await Data.insertMany(data);
-            return newData;
-        }
-        newData = new Data(data);
-        const savedData = await newData.save();
-        return savedData;
-    } catch(err) {
-        throw err;
+const create = async (data) => {
+    let newData = {};
+    if (Array.isArray(data)) {
+        if (data.length > 1000) return null;
+        newData = await Data.insertMany(data);
+        return newData;
     }
-}
+    newData = new Data(data);
+    const savedData = await newData.save();
+    return savedData;
+};
 
-async function replace(filter, data, option) {
-    try {
-        const updatedData = await Data.findOneAndReplace(filter, data, {
-            new: true,
-        });
-        return updatedData;
-    } catch(err) {
-        throw err;
-    }
-}
+const replace = async (filter, data) => {
+    const updatedData = await Data.findOneAndReplace(filter, data, {
+        new: true,
+    });
+    return updatedData;
+};
 
-async function update(filter, data, option) {
-    try {
-        const updatedData = await Data.findOneAndUpdate(filter, data, {
-            new: true,
-        });
-        return updatedData;
-    } catch(err) {
-        throw err;
-    }
-}
+const update = async (filter, data) => {
+    const updatedData = await Data.findOneAndUpdate(filter, data, {
+        new: true,
+    });
+    return updatedData;
+};
 
-async function del(filter) {
-    try {
-        const res = await Data.deleteOne(filter);
-        return res;
-    } catch(err) {
-        throw err;
-    }
-}
+const del = async (filter) => {
+    const res = await Data.deleteOne(filter);
+    return res;
+};
 
 module.exports = {
     findAll,

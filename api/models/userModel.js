@@ -1,42 +1,23 @@
-"use strict";
-
 const User = require('./userSchema');
 
-async function create(user) {
-    try {
-        const newUser = new User(user);
-        const savedUser = await newUser.save();
-        return savedUser;
-    } catch(err) {
-        throw err;
-    }
-}
+const create = async (user) => {
+    const newUser = new User(user);
+    const savedUser = await newUser.save();
+    return { ...savedUser._doc, password: '********' };
+};
 
-function login(user) {
+const findUser = async (username) => {
+    const res = await User.findOne({ username });
+    return res;
+};
 
-}
-
-async function findUser(username) {
-    try {
-        const res = await User.findOne({'username': username});
-        return res;
-    } catch(err) {
-        throw err;
-    }
-}
-
-async function del(filter) {
-    try {
-        const res = await User.deleteOne(filter);
-        return res;
-    } catch(err) {
-        throw err;
-    }
-}
+const del = async (filter) => {
+    const res = await User.deleteOne(filter);
+    return res;
+};
 
 module.exports = {
     create,
-    login,
     findUser,
     del,
-}
+};

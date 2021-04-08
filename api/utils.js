@@ -1,5 +1,7 @@
-function getPostData(req) {
-    return new Promise((resolve, reject) => {
+const { ObjectId } = require('mongodb');
+
+const getPostData = (req) =>
+    new Promise((resolve, reject) => {
         try {
             let body = '';
             req.on('data', (chunk) => {
@@ -12,10 +14,9 @@ function getPostData(req) {
             reject(err);
         }
     });
-}
 
-function getHeader(req, headerName) {
-    return new Promise((resolve, reject) => {
+const getHeader = (req, headerName) =>
+    new Promise((resolve, reject) => {
         try {
             const header = req.headers[`${headerName}`];
             resolve(header);
@@ -23,9 +24,8 @@ function getHeader(req, headerName) {
             reject(err);
         }
     });
-}
 
-function sanitize(v) {
+const sanitize = (v) => {
     if (v instanceof Object) {
         Object.keys(v).forEach((key) => {
             if (/^\$/.test(key)) {
@@ -36,32 +36,38 @@ function sanitize(v) {
         });
     }
     return v;
-}
+};
 
 const internals = {
     suspectRx: /"(?:_|\\u005[Ff])(?:_|\\u005[Ff])(?:p|\\u0070)(?:r|\\u0072)(?:o|\\u006[Ff])(?:t|\\u0074)(?:o|\\u006[Ff])(?:_|\\u005[Ff])(?:_|\\u005[Ff])"\s*:/,
 };
 
-function scan(obj, options = {}) {
+const scan = (obj, options = {}) => {
     let next = [obj];
 
     while (next.length) {
         const nodes = next;
         next = [];
         for (let i = 0; i < nodes.length; ++i) {
-            if (Object.prototype.hasOwnProperty.call(nodes[`${i}`], '__proto__')) { // Avoid calling node.hasOwnProperty directly
+            if (
+                Object.prototype.hasOwnProperty.call(nodes[`${i}`], '__proto__')
+            ) {
+                // Avoid calling node.hasOwnProperty directly
                 if (options.protoAction !== 'remove') {
-                    throw new SyntaxError('Object contains forbidden prototype property');
+                    throw new SyntaxError(
+                        'Object contains forbidden prototype property',
+                    );
                 }
 
                 delete nodes[`${i}`].__proto__;
             }
             if (nodes[`${i}`] instanceof Object) {
                 for (const key in nodes[`${i}`]) {
-                    if (Object.prototype.isPrototypeOf.call(nodes[`${i}`], key)) {
+                    if (
+                        Object.prototype.isPrototypeOf.call(nodes[`${i}`], key)
+                    ) {
                         const value = nodes[`${i}`][`${key}`];
-                        if (value
-                            && typeof value === 'object') {
+                        if (value && typeof value === 'object') {
                             next.push(nodes[`${i}`][`${key}`]);
                         }
                     }
@@ -69,9 +75,9 @@ function scan(obj, options = {}) {
             }
         }
     }
-}
+};
 
-function parse(text, ...args) {
+const parse = (text, ...args) => {
     const firstOptions = typeof args[0] === 'object' && args[0];
     const reviver = args.length > 1 || !firstOptions ? args[0] : undefined;
     const options = (args.length > 1 && args[1]) || firstOptions || {};
@@ -88,8 +94,7 @@ function parse(text, ...args) {
 
     // Ignore null and non-objects
 
-    if (!obj
-        || typeof obj !== 'object') {
+    if (!obj || typeof obj !== 'object') {
         return obj;
     }
 
@@ -104,15 +109,24 @@ function parse(text, ...args) {
     scan(obj, options);
 
     return obj;
-}
+};
 
-function safeParse(text, reviver) {
+const safeParse = (text, reviver) => {
     try {
         return parse(text, reviver);
     } catch (ignoreError) {
         return null;
     }
-}
+};
+
+const checkId = (id) => {
+    try {
+        ObjectId(id);
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
 
 module.exports = {
     getPostData,
@@ -121,4 +135,5 @@ module.exports = {
     parse,
     scan,
     safeParse,
+    checkId,
 };

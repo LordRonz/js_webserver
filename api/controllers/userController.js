@@ -8,7 +8,7 @@ const { headers } = require('../headers');
 const { verifyToken } = require('./verifyToken');
 require('dotenv').config();
 
-async function createUser(req, res) {
+const createUser = async (req, res) => {
     try {
         const body = await getPostData(req);
         let user = sanitize(safeParse(body));
@@ -48,9 +48,9 @@ async function createUser(req, res) {
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
-}
+};
 
-async function loginUser(req, res) {
+const loginUser = async (req, res) => {
     try {
         const body = await getPostData(req);
         const parsed = sanitize(safeParse(body));
@@ -71,7 +71,7 @@ async function loginUser(req, res) {
             return res.end(JSON.stringify({ message: 'Not Allowed' }));
         }
 
-        const token = jwt.sign({ _id: user._id }, process.env.ACCESS_TOKEN_SECRET, { algorithm: 'HS512', expiresIn: 60 * 20 });
+        const token = jwt.sign({ _id: user._id }, process.env.ACCESS_TOKEN_SECRET, { algorithm: 'HS512', expiresIn: 30 * 69 });
         res.statusCode = 200;
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json', Authorization: `Bearer ${token}` });
         res.write(JSON.stringify({ message: 'Success', token }));
@@ -81,18 +81,18 @@ async function loginUser(req, res) {
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
-}
+};
 
-async function changePass(req, res) {
+const changePass = async (req, res) => {
     await verifyToken(req, res);
     if (!req.user) return;
     try {
         const body = await getPostData(req);
         const parsed = sanitize(safeParse(body));
-        const oldPass = parsed.oldPassword;
-        const newPass = parsed.newPassword;
+        const { oldPassword } = parsed;
+        const { newPassword } = parsed;
         const { username } = parsed;
-        if (!username || !newPass || !oldPass) {
+        if (!username || !newPassword || !oldPassword) {
             res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'Provide username, oldPassword, and newPassword!' }));
             return;
@@ -103,7 +103,7 @@ async function changePass(req, res) {
             res.end(JSON.stringify({ message: 'User Not Found' }));
             return;
         }
-        const shaPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(oldPass).digest('hex');
+        const shaPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(oldPassword).digest('hex');
         const validPass = await bcrypt.compare(shaPass, user.password);
         if (!validPass) {
             res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
@@ -111,7 +111,7 @@ async function changePass(req, res) {
             return;
         }
         const salt = bcrypt.genSalt(13);
-        const shaNewPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(newPass).digest('hex');
+        const shaNewPass = crypto.createHmac('sha256', process.env.SHA_SECRET_KEY).update(newPassword).digest('hex');
         const hashedNewPass = await bcrypt.hash(shaNewPass, await salt);
         user.password = hashedNewPass;
         const updatedUser = user.save();
@@ -122,9 +122,9 @@ async function changePass(req, res) {
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
-}
+};
 
-async function deleteUser(req, res) {
+const deleteUser = async (req, res) => {
     await verifyToken(req, res);
     if (!req.user) return;
     try {
@@ -158,7 +158,7 @@ async function deleteUser(req, res) {
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
-}
+};
 
 module.exports = {
     createUser,
