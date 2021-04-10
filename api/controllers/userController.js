@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require('mongoose').Types;
 const Users = require('../models/userModel');
 const { getPostData, sanitize, safeParse } = require('../utils');
 const { headers } = require('../headers');
@@ -30,9 +30,9 @@ const createUser = async (req, res) => {
             );
         }
         if (
-            !user.password
-            || user.password.length < 8
-            || user.password.length > 255
+            !user.password ||
+            user.password.length < 8 ||
+            user.password.length > 255
         ) {
             res.writeHead(400, {
                 ...headers,

@@ -1,4 +1,4 @@
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require('mongoose').Types;
 const Data = require('./dataSchema');
 
 const findAll = async (page) => {

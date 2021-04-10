@@ -1,4 +1,4 @@
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require('mongoose').Types;
 const Data = require('../models/dataModel');
 const { getPostData, sanitize, safeParse } = require('../utils');
 const { verifyToken } = require('./verifyToken');
@@ -25,11 +25,17 @@ const getData = async (req, res, id) => {
     try {
         const data = await Data.findById(id);
         if (!data) {
-            res.writeHead(404, { ...headers, 'Content-Type': 'application/json' });
+            res.writeHead(404, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
             res.write(JSON.stringify({ message: 'Data Not Found' }));
             res.end();
         } else {
-            res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
+            res.writeHead(200, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
             res.write(JSON.stringify(data));
             res.end();
         }
@@ -64,10 +70,16 @@ const updateData = async (req, res, id) => {
         const body = getPostData(req);
         const filter = { _id: ObjectId(id) };
         const updateDoc = sanitize(safeParse(await body));
-        const updData = req.method === 'PATCH' ? await Data.update(filter, updateDoc) : await Data.replace(filter, updateDoc);
+        const updData =
+            req.method === 'PATCH'
+                ? await Data.update(filter, updateDoc)
+                : await Data.replace(filter, updateDoc);
 
         if (!updData) {
-            res.writeHead(404, { ...headers, 'Content-Type': 'application/json' });
+            res.writeHead(404, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
             res.end(JSON.stringify({ message: 'Data not Found' }));
             return;
         }
@@ -88,11 +100,17 @@ const deleteData = async (req, res, id) => {
         const query = { _id: ObjectId(id) };
         const result = await Data.del(query);
         if (result.deletedCount === 1) {
-            res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
+            res.writeHead(200, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
             res.write(JSON.stringify({ ...result, message: 'Successful' }));
             res.end();
         } else {
-            res.writeHead(404, { ...headers, 'Content-Type': 'application/json' });
+            res.writeHead(404, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
             res.write(JSON.stringify({ message: 'Data Not Found' }));
             res.end();
         }

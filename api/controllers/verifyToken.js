@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require('mongoose').Types;
 const { getHeader } = require('../utils');
 const User = require('../models/userSchema');
 const { headers } = require('../headers');

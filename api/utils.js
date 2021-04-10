@@ -1,4 +1,4 @@
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require('mongoose').Types;
 
 const getPostData = (req) =>
     new Promise((resolve, reject) => {
