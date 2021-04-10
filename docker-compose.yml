@@ -9,7 +9,7 @@ services:
         volumes:
             - ./api/key.pem:/code/key.pem
             - ./api/cert.pem:/code/cert.pem
-            - ./.env:/code/.env
+            - ./api/.env:/code/.env
     nginx:
         restart: always
         image: nginx:1.18.0-alpine
