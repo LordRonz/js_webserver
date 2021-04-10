@@ -13,6 +13,6 @@ services:
             - "443:443"
         image: lordronz/b201_baktilab:nginx
         volumes:
-            - ./ssl/cert.pem:/etc/nginx/ssl/cert.pem
-            - ./ssl/key.pem:/etc/nginx/ssl/key.pem
-            - ./nginx-conf/nginx.conf:/etc/nginx/conf.d/example.conf
+            - ./nginx/ssl/cert.pem:/etc/nginx/ssl/cert.pem
+            - ./nginx/ssl/key.pem:/etc/nginx/ssl/key.pem
+            - ./nginx/nginx-conf/nginx.conf:/etc/nginx/conf.d/example.conf
