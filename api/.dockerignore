@@ -1,2 +1,5 @@
 node_modules
 npm-debug.log
+start.sh
+generatecert.sh
+secret_key_gen.py
