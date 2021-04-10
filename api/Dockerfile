@@ -7,7 +7,8 @@ COPY . /code
 
 RUN npm install --production
 
-CMD [ "node", "server.js" ]
-
 RUN addgroup -S yourmom && adduser -S yourmom -G yourmom
 USER yourmom
+RUN chown -R yourmom /code
+
+CMD [ "node", "server.js" ]
