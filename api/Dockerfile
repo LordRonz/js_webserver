@@ -1,4 +1,4 @@
-FROM node
+FROM node:14.16.1-alpine
 
 EXPOSE 5000
 
