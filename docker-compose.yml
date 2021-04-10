@@ -15,4 +15,4 @@ services:
         volumes:
             - ./nginx/ssl/cert.pem:/etc/nginx/ssl/cert.pem
             - ./nginx/ssl/key.pem:/etc/nginx/ssl/key.pem
-            - ./nginx/nginx-conf/nginx.conf:/etc/nginx/conf.d/example.conf
+            - ./nginx/nginx-conf/nginx.conf:/etc/nginx/conf.d/default.conf
