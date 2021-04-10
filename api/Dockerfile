@@ -5,7 +5,6 @@ EXPOSE 5000
 WORKDIR /code
 COPY . /code
 
-RUN npm install --production && addgroup -S yourmom && adduser -S yourmom -G yourmom && chown -R yourmom /code
-USER yourmom
+RUN npm install --production
 
 CMD [ "node", "server.js" ]
