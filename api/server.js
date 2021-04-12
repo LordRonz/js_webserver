@@ -36,6 +36,7 @@ const server = https.createServer(options, (req, res) => {
     if (req.url.length > 50) {
         res.writeHead(414, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: '414 URI Too Long' }));
+        return;
     }
 
     if (req.url === '/api/data' && req.method === 'GET') {
