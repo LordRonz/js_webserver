@@ -1,29 +1,28 @@
 const { ObjectId } = require('mongoose').Types;
+const { headers } = require('./headers');
 
-const getPostData = (req) =>
-    new Promise((resolve, reject) => {
-        try {
-            let body = '';
-            req.on('data', (chunk) => {
-                body += chunk;
-            });
-            req.on('end', () => {
-                resolve(body);
-            });
-        } catch (err) {
-            reject(err);
-        }
-    });
+const getPostData = (req) => new Promise((resolve, reject) => {
+    try {
+        let body = '';
+        req.on('data', (chunk) => {
+            body += chunk;
+        });
+        req.on('end', () => {
+            resolve(body);
+        });
+    } catch (err) {
+        reject(err);
+    }
+});
 
-const getHeader = (req, headerName) =>
-    new Promise((resolve, reject) => {
-        try {
-            const header = req.headers[`${headerName}`];
-            resolve(header);
-        } catch (err) {
-            reject(err);
-        }
-    });
+const getHeader = (req, headerName) => new Promise((resolve, reject) => {
+    try {
+        const header = req.headers[`${headerName}`];
+        resolve(header);
+    } catch (err) {
+        reject(err);
+    }
+});
 
 const sanitize = (v) => {
     if (v instanceof Object) {
@@ -128,6 +127,20 @@ const checkId = (id) => {
     }
 };
 
+const isJsonBodyValid = (parsed, res) => {
+    if (!parsed) {
+        res.writeHead(400, {
+            ...headers,
+            'Content-Type': 'application/json',
+        });
+        res.end(
+            JSON.stringify({ message: 'Invalid JSON!' }),
+        );
+        return false;
+    }
+    return true;
+};
+
 module.exports = {
     getPostData,
     getHeader,
@@ -136,4 +149,5 @@ module.exports = {
     scan,
     safeParse,
     checkId,
+    isJsonBodyValid,
 };

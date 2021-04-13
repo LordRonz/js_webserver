@@ -3,6 +3,7 @@ services:
     api:
         build:
             context: ./api
+        restart: unless-stopped
         ports:
             - "5000:5000"
         image: lordronz/b201_baktilab:api
@@ -11,7 +12,7 @@ services:
             - ./api/cert.pem:/code/cert.pem
             - ./api/.env:/code/.env
     nginx:
-        restart: always
+        restart: unless-stopped
         image: nginx:1.18.0-alpine
         ports:
             - "443:443"
