@@ -1,65 +1,103 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { ObjectId } = require('mongoose').Types;
-const Data = require('../models/dataModel');
+const Users = require('../models/userModel');
 const {
     getPostData, sanitize, safeParse, isJsonBodyValid,
 } = require('../utils');
-const { verifyToken } = require('./verifyToken');
 const { headers } = require('../headers');
+const { passwordStrength } = require('../passwordStrength');
+require('dotenv').config();
 
-const getAllData = async (req, res, page) => {
-    await verifyToken(req, res);
-    if (!req.user) return;
-    try {
-        const data = Data.findAll(page);
-        res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
-        res.write(JSON.stringify(await data));
-        res.end();
-    } catch (error) {
-        console.log(error);
-        res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Internal Server Error' }));
-    }
-};
-
-const getData = async (req, res, id) => {
-    await verifyToken(req, res);
-    if (!req.user) return;
-    try {
-        const data = await Data.findById(id);
-        if (!data) {
-            res.writeHead(404, {
-                ...headers,
-                'Content-Type': 'application/json',
-            });
-            res.write(JSON.stringify({ message: 'Data Not Found' }));
-            res.end();
-        } else {
-            res.writeHead(200, {
-                ...headers,
-                'Content-Type': 'application/json',
-            });
-            res.write(JSON.stringify(data));
-            res.end();
-        }
-    } catch (error) {
-        console.log(error);
-        res.writeHead(404, { ...headers, 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Data Not Found' }));
-    }
-};
-
-const createData = async (req, res) => {
-    await verifyToken(req, res);
-    if (!req.user) return;
+const createUser = async (req, res) => {
     try {
         const body = await getPostData(req);
-        const data = sanitize(safeParse(body));
-        if (!isJsonBodyValid(data, res)) {
+        let user = sanitize(safeParse(body));
+        if (!isJsonBodyValid(user, res)) {
             return;
         }
-        const newData = Data.create(data);
+        if (!user.username || user.username.length === 0) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({ message: 'Invalid username!' }));
+            return;
+        }
+        if (user.username > 255) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(
+                JSON.stringify({ message: 'Username is too long!' }),
+            );
+            return;
+        }
+        if (
+            !user.password
+            || user.password.length < 8
+            || user.password.length > 255
+        ) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            if (user.password) {
+                res.end(
+                    JSON.stringify({
+                        message:
+                            'Password must be between 8-255 characters long',
+                    }),
+                );
+                return;
+            }
+            res.end(JSON.stringify({ message: 'Invalid password!' }));
+            return;
+        }
+        if (passwordStrength(user.password).id < 2) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(
+                JSON.stringify({ message: 'Password is too weak!' }),
+            );
+            return;
+        }
+        if (!user.username.match(/\w+$/)) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(
+                JSON.stringify({
+                    message:
+                        'Username must contain only letters, numbers, and underscores',
+                }),
+            );
+            return;
+        }
+        const userExist = await Users.findUser(user.username);
+        if (userExist) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({ message: 'Username Taken!' }));
+            return;
+        }
+        const salt = bcrypt.genSalt(13);
+        const shaPass = crypto
+            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .update(user.password)
+            .digest('hex');
+        const hashedPass = await bcrypt.hash(shaPass, await salt);
+        user = { ...user, password: hashedPass };
+        const newUser = Users.create(user);
         res.writeHead(201, { ...headers, 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(await newData));
+        res.end(JSON.stringify(await newUser));
         return;
     } catch (error) {
         console.log(error);
@@ -68,31 +106,60 @@ const createData = async (req, res) => {
     }
 };
 
-const updateData = async (req, res, id) => {
-    await verifyToken(req, res);
-    if (!req.user) return;
+const loginUser = async (req, res) => {
     try {
-        const body = getPostData(req);
-        const filter = { _id: ObjectId(id) };
-        const updateDoc = sanitize(safeParse(await body));
-        if (!isJsonBodyValid(body, res)) {
+        const body = await getPostData(req);
+        const parsed = sanitize(safeParse(body));
+        if (!isJsonBodyValid(parsed, res)) {
             return;
         }
-        const updData = req.method === 'PATCH'
-            ? await Data.update(filter, updateDoc)
-            : await Data.replace(filter, updateDoc);
-
-        if (!updData) {
-            res.writeHead(404, {
+        const { username } = parsed;
+        if (!username || !parsed.password) {
+            res.writeHead(400, {
                 ...headers,
                 'Content-Type': 'application/json',
             });
-            res.end(JSON.stringify({ message: 'Data not Found' }));
+            res.end(
+                JSON.stringify({ message: 'Provide a username and password!' }),
+            );
+            return;
+        }
+        const user = await Users.findUser(username);
+        if (!user) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({ message: 'User Not Found' }));
+            return;
+        }
+        const shaPass = crypto
+            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .update(parsed.password)
+            .digest('hex');
+        const validPass = await bcrypt.compare(shaPass, user.password);
+        if (!validPass) {
+            res.writeHead(401, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({ message: 'Not Allowed' }));
             return;
         }
 
-        res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(updData));
+        const token = jwt.sign(
+            { _id: user._id },
+            process.env.ACCESS_TOKEN_SECRET,
+            { algorithm: 'HS512', expiresIn: 30 * 69 },
+        );
+        res.statusCode = 200;
+        res.writeHead(200, {
+            ...headers,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        });
+        res.write(JSON.stringify({ message: 'Success', token }));
+        res.end();
     } catch (error) {
         console.log(error);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
@@ -100,27 +167,116 @@ const updateData = async (req, res, id) => {
     }
 };
 
-const deleteData = async (req, res, id) => {
-    await verifyToken(req, res);
-    if (!req.user) return;
+const changePass = async (req, res) => {
     try {
-        const query = { _id: ObjectId(id) };
-        const result = await Data.del(query);
-        if (result.deletedCount === 1) {
-            res.writeHead(200, {
+        const body = await getPostData(req);
+        const parsed = sanitize(safeParse(body));
+        if (!isJsonBodyValid(parsed, res)) {
+            return;
+        }
+        const { oldPassword, newPassword, username } = parsed;
+        if (!username || !newPassword || !oldPassword) {
+            res.writeHead(400, {
                 ...headers,
                 'Content-Type': 'application/json',
             });
-            res.write(JSON.stringify({ ...result, message: 'Successful' }));
-            res.end();
-        } else {
+            res.end(
+                JSON.stringify({
+                    message: 'Provide username, oldPassword, and newPassword!',
+                }),
+            );
+            return;
+        }
+        const user = await Users.findUser(username);
+        if (!user) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({ message: 'User Not Found' }));
+            return;
+        }
+        if (passwordStrength(newPassword).id < 2) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({ message: 'Password is too weak!' }));
+            return;
+        }
+        const shaPass = crypto
+            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .update(oldPassword)
+            .digest('hex');
+        const validPass = await bcrypt.compare(shaPass, user.password);
+        if (!validPass) {
+            res.writeHead(401, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({ message: 'Not Allowed' }));
+            return;
+        }
+        const salt = bcrypt.genSalt(13);
+        const shaNewPass = crypto
+            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .update(newPassword)
+            .digest('hex');
+        const hashedNewPass = await bcrypt.hash(shaNewPass, await salt);
+        user.password = hashedNewPass;
+        const updatedUser = user.save();
+        res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(await updatedUser));
+    } catch (error) {
+        console.log(error);
+        res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Internal Server Error' }));
+    }
+};
+
+const deleteUser = async (req, res) => {
+    try {
+        const body = await getPostData(req);
+        const parsed = sanitize(safeParse(body));
+        if (!isJsonBodyValid(parsed, res)) {
+            return;
+        }
+        const { username, password } = parsed;
+        if (!username || !password) {
+            res.writeHead(400, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(
+                JSON.stringify({ message: 'Provide username and password!' }),
+            );
+            return;
+        }
+        const user = await Users.findUser(username);
+        if (!user) {
             res.writeHead(404, {
                 ...headers,
                 'Content-Type': 'application/json',
             });
-            res.write(JSON.stringify({ message: 'Data Not Found' }));
-            res.end();
+            res.end(JSON.stringify({ message: 'User Not Found' }));
+            return;
         }
+        const shaPass = crypto
+            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .update(password)
+            .digest('hex');
+        const validPass = await bcrypt.compare(shaPass, user.password);
+        if (!validPass) {
+            res.writeHead(401, {
+                ...headers,
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({ message: 'Not Allowed' }));
+            return;
+        }
+        const deletedUser = Users.del({ _id: ObjectId(user._id) });
+        res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(await deletedUser));
     } catch (error) {
         console.log(error);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
@@ -129,9 +285,8 @@ const deleteData = async (req, res, id) => {
 };
 
 module.exports = {
-    getAllData,
-    getData,
-    createData,
-    updateData,
-    deleteData,
+    createUser,
+    loginUser,
+    changePass,
+    deleteUser,
 };
