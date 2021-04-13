@@ -75,7 +75,7 @@ const updateData = async (req, res, id) => {
         const body = getPostData(req);
         const filter = { _id: ObjectId(id) };
         const updateDoc = sanitize(safeParse(await body));
-        if (!isJsonBodyValid(body, res)) {
+        if (!isJsonBodyValid(updateDoc, res)) {
             return;
         }
         const updData = req.method === 'PATCH'
