@@ -99,8 +99,8 @@ const createUser = async (req, res) => {
         res.writeHead(201, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify(await newUser));
         return;
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
@@ -160,8 +160,8 @@ const loginUser = async (req, res) => {
         });
         res.write(JSON.stringify({ message: 'Success', token }));
         res.end();
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
@@ -227,8 +227,8 @@ const changePass = async (req, res) => {
         const updatedUser = user.save();
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify(await updatedUser));
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
@@ -277,8 +277,8 @@ const deleteUser = async (req, res) => {
         const deletedUser = Users.del({ _id: ObjectId(user._id) });
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify(await deletedUser));
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
