@@ -25,5 +25,4 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
-    - run: cd api
-    - run: npm ci
+    - run: echo "kontol"
