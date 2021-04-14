@@ -1,6 +1,7 @@
-const http = require('http');
+const https = require('https');
 // Connect to mongodb atlas
 require('./database/mongooseutil');
+const fs = require('fs');
 const {
     getAllData,
     getData,
@@ -16,7 +17,12 @@ const {
 } = require('./controllers/userController');
 const { checkId } = require('./utils');
 
-const server = http.createServer((req, res) => {
+const options = {
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem'),
+};
+
+const server = https.createServer(options, (req, res) => {
     req.url = encodeURI(req.url);
     console.log(`${req.method} ${req.httpVersion} ${req.url}`);
 

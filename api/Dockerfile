@@ -5,6 +5,6 @@ EXPOSE 5000
 WORKDIR /code
 COPY . /code
 
-RUN npm install --production
+RUN npm ci --production
 
 CMD [ "node", "server.js" ]
