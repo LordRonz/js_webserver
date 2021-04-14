@@ -14,8 +14,8 @@ const getAllData = async (req, res, page) => {
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
         res.write(JSON.stringify(await data));
         res.end();
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
@@ -41,8 +41,8 @@ const getData = async (req, res, id) => {
             res.write(JSON.stringify(data));
             res.end();
         }
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(404, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Data Not Found' }));
     }
@@ -61,8 +61,8 @@ const createData = async (req, res) => {
         res.writeHead(201, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify(await newData));
         return;
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
@@ -93,8 +93,8 @@ const updateData = async (req, res, id) => {
 
         res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify(updData));
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
@@ -121,8 +121,8 @@ const deleteData = async (req, res, id) => {
             res.write(JSON.stringify({ message: 'Data Not Found' }));
             res.end();
         }
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
