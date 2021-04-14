@@ -42,8 +42,8 @@ const server = https.createServer(options, (req, res) => {
     if (req.url === '/api/data' && req.method === 'GET') {
         getAllData(req, res);
     } else if (
-        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/) &&
-        req.method === 'GET'
+        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/)
+    && req.method === 'GET'
     ) {
         const id = req.url.split('/')[3];
         if (!checkId(id)) {
@@ -53,16 +53,16 @@ const server = https.createServer(options, (req, res) => {
             getData(req, res, id);
         }
     } else if (
-        req.url.match(/\/api\/data\/page\/([0-9]+$)/) &&
-        req.method === 'GET'
+        req.url.match(/\/api\/data\/page\/([0-9]+$)/)
+    && req.method === 'GET'
     ) {
         const page = parseInt(req.url.split('/')[4], 10);
         getAllData(req, res, page);
     } else if (req.url === '/api/data' && req.method === 'POST') {
         createData(req, res);
     } else if (
-        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/) &&
-        (req.method === 'PUT' || req.method === 'PATCH')
+        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/)
+    && (req.method === 'PUT' || req.method === 'PATCH')
     ) {
         const id = req.url.split('/')[3];
         if (!checkId(id)) {
@@ -72,8 +72,8 @@ const server = https.createServer(options, (req, res) => {
             updateData(req, res, id);
         }
     } else if (
-        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/) &&
-        req.method === 'DELETE'
+        req.url.match(/\/api\/data\/([a-fA-F0-9]+$)/)
+    && req.method === 'DELETE'
     ) {
         const id = req.url.split('/')[3];
         if (!checkId(id)) {
@@ -98,9 +98,9 @@ const server = https.createServer(options, (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, (err) => {
-    if (err) {
-        console.log(err);
+server.listen(PORT, (e) => {
+    if (e) {
+        console.log(e);
     }
     console.log(`server running on port ${PORT}`);
     console.log(`PID: ${process.pid}`);
@@ -108,8 +108,8 @@ server.listen(PORT, (err) => {
 
 const handleExit = (signal) => {
     console.log(`Received ${signal}. Close my server properly.`);
-    server.close((err) => {
-        if (err) console.log(err);
+    server.close((e) => {
+        if (e) console.log(e);
         process.exit(0);
     });
 };

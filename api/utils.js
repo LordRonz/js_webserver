@@ -10,8 +10,8 @@ const getPostData = (req) => new Promise((resolve, reject) => {
         req.on('end', () => {
             resolve(body);
         });
-    } catch (err) {
-        reject(err);
+    } catch (e) {
+        reject(e);
     }
 });
 
@@ -19,8 +19,8 @@ const getHeader = (req, headerName) => new Promise((resolve, reject) => {
     try {
         const header = req.headers[`${headerName}`];
         resolve(header);
-    } catch (err) {
-        reject(err);
+    } catch (e) {
+        reject(e);
     }
 });
 
