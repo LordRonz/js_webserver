@@ -90,7 +90,7 @@ const createUser = async (req, res) => {
         }
         const salt = bcrypt.genSalt(13);
         const shaPass = crypto
-            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .createHmac('sha256', process.env.SHA_SECRET_KEY || 'yourmomgae')
             .update(user.password)
             .digest('hex');
         const hashedPass = await bcrypt.hash(shaPass, await salt);
@@ -134,7 +134,7 @@ const loginUser = async (req, res) => {
             return;
         }
         const shaPass = crypto
-            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .createHmac('sha256', process.env.SHA_SECRET_KEY || 'yourmomgae')
             .update(parsed.password)
             .digest('hex');
         const validPass = await bcrypt.compare(shaPass, user.password);
@@ -149,7 +149,7 @@ const loginUser = async (req, res) => {
 
         const token = jwt.sign(
             { _id: user._id },
-            process.env.ACCESS_TOKEN_SECRET,
+            process.env.ACCESS_TOKEN_SECRET || 'yourmomgae',
             { algorithm: 'HS512', expiresIn: 30 * 69 },
         );
         res.statusCode = 200;
@@ -205,7 +205,7 @@ const changePass = async (req, res) => {
             return;
         }
         const shaPass = crypto
-            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .createHmac('sha256', process.env.SHA_SECRET_KEY || 'yourmomgae')
             .update(oldPassword)
             .digest('hex');
         const validPass = await bcrypt.compare(shaPass, user.password);
@@ -219,7 +219,7 @@ const changePass = async (req, res) => {
         }
         const salt = bcrypt.genSalt(13);
         const shaNewPass = crypto
-            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .createHmac('sha256', process.env.SHA_SECRET_KEY || 'yourmomgae')
             .update(newPassword)
             .digest('hex');
         const hashedNewPass = await bcrypt.hash(shaNewPass, await salt);
@@ -262,7 +262,7 @@ const deleteUser = async (req, res) => {
             return;
         }
         const shaPass = crypto
-            .createHmac('sha256', process.env.SHA_SECRET_KEY)
+            .createHmac('sha256', process.env.SHA_SECRET_KEY || 'yourmomgae')
             .update(password)
             .digest('hex');
         const validPass = await bcrypt.compare(shaPass, user.password);

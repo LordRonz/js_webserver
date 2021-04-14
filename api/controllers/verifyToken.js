@@ -36,7 +36,7 @@ const verifyToken = async (req, res) => {
         try {
             const verified = jwt.verify(
                 authToken,
-                process.env.ACCESS_TOKEN_SECRET,
+                process.env.ACCESS_TOKEN_SECRET || 'yourmomgae',
                 { algorithms: ['HS512'] },
             );
             if (!(await User.findOne({ _id: ObjectId(verified._id) }))) {
