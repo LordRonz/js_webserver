@@ -8,6 +8,8 @@ services:
             - "5000:5000"
         image: lordronz/b201_baktilab:api
         volumes:
+            - ./api/key.pem:/code/key.pem
+            - ./api/cert.pem:/code/cert.pem
             - ./api/.env:/code/.env
     nginx:
         restart: unless-stopped
