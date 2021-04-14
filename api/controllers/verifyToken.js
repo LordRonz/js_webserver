@@ -44,13 +44,13 @@ const verifyToken = async (req, res) => {
             }
             req.user = verified;
             return verified;
-        } catch (err) {
-            if (err.name === 'TokenExpiredError') {
+        } catch (e) {
+            if (e.name === 'TokenExpiredError') {
                 res.writeHead(401, {
                     ...headers,
                     'Content-Type': 'application/json',
                 });
-                return res.end(JSON.stringify(err));
+                return res.end(JSON.stringify(e));
             }
             res.writeHead(400, {
                 ...headers,
@@ -58,8 +58,8 @@ const verifyToken = async (req, res) => {
             });
             return res.end(JSON.stringify({ message: 'Invalid Token' }));
         }
-    } catch (err) {
-        console.log(err);
+    } catch (e) {
+        console.log(e);
         res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ message: 'Internal Server Error' }));
     }
